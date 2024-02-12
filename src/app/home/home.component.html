@@ -1,0 +1,40 @@
+<div class="parent-container">
+    <h2 class="h2"><i class="bi bi-camera-video-fill"></i> Connect-X</h2>
+    <h3 *ngIf="permissionError" class="permission-error">Grant Camera and Mic Permission </h3>
+    <div class="video-container">
+  
+        <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream"></app-video>
+
+        <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream"></app-video>
+     
+    </div>
+  
+    <div class="buttons-container rounded border border-primary">
+      <div class="start-meeting-container">
+        <button (click)="startNewMeeting()" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
+          {{createRoomButtonText}} <i class="bi bi-camera-video"  *ngIf="!createRoomLoader"></i>
+          <span class="spinner-border spinner-border-sm" aria-hidden="true" *ngIf="createRoomLoader"></span>
+          
+        </button>
+  
+        <div *ngIf="offerRoomId">
+          <p class="h5 d-inline room-invite-code">Invite Code: {{offerRoomId}}</p>
+          <i class="bi copy-button inline" [className]="copyIconClass" (click)="copyOfferRoomIdToClipBoard()"></i>
+        </div>
+        
+  
+      </div>
+
+      <hr class="divider">
+    
+      <div class="join-meeting-container">
+        <input [(ngModel)]="answerRoomId" class="form-control" placeholder="Enter Invite Code">
+  
+        <button (click)="joinMeeting()" class="btn btn-info text-nowrap" [disabled]="answerRoomId.length==0">Join Meeting  <i class="bi bi-send-plus-fill"></i></button>  
+      </div>
+     
+  
+    </div>
+    
+    
+  </div>

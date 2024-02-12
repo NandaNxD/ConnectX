@@ -1,0 +1,71 @@
+.parent-container{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+app-video{
+    height: 60vh;
+    margin: 1rem;
+}
+
+.permission-error{
+    color:red
+}
+
+.video-container{
+    display:flex;
+    gap: 2rem;
+    justify-content: center;
+}
+
+@media screen and (max-width:700px){
+    .video-container{
+        display:flex;
+        gap: 2rem;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+.buttons-container{
+    padding: 1rem;
+    margin: 1.5rem;
+}
+
+
+.start-meeting-container{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap:0.5rem
+}
+
+.divider{
+    height: 2px;
+    background-color: #0b5ed7;
+}
+
+.join-meeting-container{
+    display: flex;
+    gap:20px
+}
+
+ ::ng-deep .p{
+    display: inline !important;
+}
+
+.room-invite-code{
+    padding-right: 1rem;
+}
+
+
+.copy-button:hover{
+    transform: scale(1.2);
+    // transition: ease 100ms;
+}
+
+.copy-button:active{
+   transform: scale(1.0);
+}
