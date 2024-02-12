@@ -1,6 +1,7 @@
 # ConnectX
 Realtime Video Chat App using WebRTC built using Angular
-![image](https://github.com/NandaNxD/ConnectX/assets/65838540/2ec7ff1f-1034-4c7b-9e4b-8e116672cbd2)
+![image](https://github.com/NandaNxD/ConnectX/assets/65838540/c89725a9-562b-4b15-88c0-133735c64799)
+
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.5.
