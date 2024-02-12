@@ -269,7 +269,7 @@ export class HomeComponent implements OnInit,AfterViewInit {
     navigator.clipboard.writeText(this.offerRoomId);
     setTimeout(()=>{
       this.copyIconClass='bi-copy'
-    },1000)
+    },2000)
   }
 
   
