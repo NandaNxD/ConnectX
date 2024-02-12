@@ -35,6 +35,8 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   copyIconClass='bi-copy'
 
+  illustrationVisible=true;
+
 
   servers = {
     iceServers: [
@@ -61,7 +63,10 @@ export class HomeComponent implements OnInit,AfterViewInit {
     this.creator=false;
     
     this.getPermissions()
-    .then(()=>this.createSdpAnswer())
+    .then(()=>{
+      this.illustrationVisible=false;
+      this.createSdpAnswer()
+    })
     .catch((error)=>{
       this.permissionError=true;
       console.log(error)
@@ -113,7 +118,10 @@ export class HomeComponent implements OnInit,AfterViewInit {
   startNewMeeting(){
     this.createRoomLoader=true;
     this.getPermissions()
-    .then(()=>this.createSdpOffer())
+    .then(()=>{
+      this.illustrationVisible=false;
+      this.createSdpOffer()
+    })
     .catch(error=>{
       this.permissionError=true;
       console.log(error)
