@@ -76,3 +76,24 @@ app-video{
     max-width: 400px;
     height: 50vh;
 }
+
+.meeting-action-buttons{
+    display: flex;
+    gap:4rem;
+    font-size: 2rem;
+
+    .hangup-button{
+        color: red;
+    }
+
+}
+
+
+.bi:hover{
+    transform: scale(1.1);
+    transition: all 200ms;
+}
+
+.bi:active{
+    transform: scale(1.0);
+}

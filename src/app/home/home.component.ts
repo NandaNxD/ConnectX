@@ -37,6 +37,14 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   illustrationVisible=true;
 
+  isCameraOn=false;
+  isMicOn=false;
+  isScreenSharing=false;
+
+  inMeeting=false;
+
+  videoSender!:RTCRtpSender;
+
 
   servers = {
     iceServers: [
@@ -58,12 +66,50 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   }
 
+  turnOnCamera(){
+    // navigator.mediaDevices.getUserMedia({
+    //   video:true
+    // }).then((stream)=>{
+    //   this.localStream.addTrack(stream.getVideoTracks()[0]);
+    //   //this.peerConnection.addTrack(stream.getVideoTracks()[0],this.localStream)
+    // })
+
+    this.localStream.getVideoTracks()[0].enabled=true;
+
+    this.isCameraOn=true;
+  }
+
+  turnOffCamera(){
+    this.localStream.getVideoTracks()[0].enabled=false;
+
+    // this.localStream.getVideoTracks().forEach((track)=>{
+    //   track.stop();
+    //   this.localStream.removeTrack(track);
+
+    //   this.peerConnection.removeTrack(this.videoSender);
+
+    // })
+    this.isCameraOn=false;
+  }
+
+  turnOnMic(){
+    this.isMicOn=true;
+    this.localStream.getAudioTracks()[0].enabled=true;
+  }
+
+  turnOffMic(){
+    this.isMicOn=false;
+    this.localStream.getAudioTracks()[0].enabled=false;
+  }
+
 
   joinMeeting(){
     this.creator=false;
     
     this.getPermissions()
     .then(()=>{
+      this.isCameraOn=true;
+      this.isMicOn=true;
       this.illustrationVisible=false;
       this.createSdpAnswer()
     })
@@ -119,6 +165,8 @@ export class HomeComponent implements OnInit,AfterViewInit {
     this.createRoomLoader=true;
     this.getPermissions()
     .then(()=>{
+      this.isCameraOn=true;
+      this.isMicOn=true;
       this.illustrationVisible=false;
       this.createSdpOffer()
     })
@@ -139,9 +187,7 @@ export class HomeComponent implements OnInit,AfterViewInit {
       this.permissionError=false;
       this.localStream=res;
 
-      this.permissionsGranted=true;
-
-     
+      this.permissionsGranted=true;     
 
       this.localStream.getTracks().forEach((streamTrack)=>{
         console.log(streamTrack.kind)
@@ -159,6 +205,10 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
     })
     
+  }
+
+  endMeeting(){
+    location.reload();
   }
 
   createSdpOffer(){

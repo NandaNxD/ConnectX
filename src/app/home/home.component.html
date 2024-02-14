@@ -3,12 +3,23 @@
     <h3 *ngIf="permissionError" class="permission-error">Grant Camera and Mic Permission </h3>
     <div class="video-container">
   
-        <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream"></app-video>
+        <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream" [isMicOn]="isMicOn" [isCameraOn]="isCameraOn"></app-video>
 
         <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream"></app-video>
      
     </div>
-  
+
+    <div class="meeting-action-buttons" *ngIf="localStream || remoteStream">
+
+      <i class="bi bi-camera-video-fill" *ngIf="isCameraOn" (click)="turnOffCamera()"></i>
+      <i class="bi bi-camera-video-off-fill" *ngIf="!isCameraOn" (click)="turnOnCamera()"></i>
+      <i class="bi bi-mic-fill" *ngIf="isMicOn" (click)="turnOffMic()"></i>
+      <i class="bi bi-mic-mute-fill" *ngIf="!isMicOn" (click)="turnOnMic()"></i>
+      <i class="bi bi-telephone-x-fill hangup-button" (click)="endMeeting()"></i>
+      <i class="bi bi-arrow-up-square-fill" *ngIf="false"></i>
+
+    </div>
+
     <div class="buttons-container rounded border border-primary">
       <div class="start-meeting-container">
         <button (click)="startNewMeeting()" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
