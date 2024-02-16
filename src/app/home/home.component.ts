@@ -113,25 +113,13 @@ export class HomeComponent implements OnInit,AfterViewInit {
   }
 
   turnOnMic(){
+    this.localStream.getAudioTracks()[0].enabled=true;
     this.isMicOn=true;
-    navigator.mediaDevices.getUserMedia({
-      audio:true
-    }).then(stream=>{
-      this.peerConnection.getSenders().forEach((res)=>{
-        if(res.track?.kind=='audio'){
-          this.localStream.addTrack(stream.getAudioTracks()[0]);
-          res.replaceTrack(stream.getAudioTracks()[0]);
-        }
-      })
-    })
   }
 
   turnOffMic(){
+    this.localStream.getAudioTracks()[0].enabled=false;
     this.isMicOn=false;
-    if(this.localStream.getAudioTracks().length){
-      this.localStream.getAudioTracks()[0].stop();
-      this.localStream.removeTrack(this.localStream.getAudioTracks()[0]);
-    }
   }
 
   expandVideo(videoOrigin:string){
