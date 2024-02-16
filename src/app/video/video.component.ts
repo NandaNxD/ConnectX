@@ -25,13 +25,7 @@ export class VideoComponent implements AfterViewInit,OnInit,OnChanges{
 
   }
   ngOnChanges(changes: SimpleChanges): void {
-    if(changes['isCameraOn']){
-      
-    }
 
-    if(changes['isMicOn']){
-      this.isMicOn=changes['isMicOn'].currentValue   
-    }
   }
 
   ngOnInit(): void {

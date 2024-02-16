@@ -67,39 +67,67 @@ export class HomeComponent implements OnInit,AfterViewInit {
   }
 
   turnOnCamera(){
-    // navigator.mediaDevices.getUserMedia({
-    //   video:true
-    // }).then((stream)=>{
-    //   this.localStream.addTrack(stream.getVideoTracks()[0]);
-    //   //this.peerConnection.addTrack(stream.getVideoTracks()[0],this.localStream)
-    // })
+    navigator.mediaDevices.getUserMedia({
+      video:true
+    }).then((stream)=>{
+      this.peerConnection.getSenders().forEach((res)=>{
+        if(res.track?.kind=='video'){
+          res.track.stop();
+          this.localStream.addTrack(stream.getVideoTracks()[0]);
+          res.replaceTrack(stream.getVideoTracks()[0]);
+        }
+      })
 
-    this.localStream.getVideoTracks()[0].enabled=true;
+    })
 
     this.isCameraOn=true;
   }
 
   turnOffCamera(){
-    this.localStream.getVideoTracks()[0].enabled=false;
+    const blackCanvas = document.createElement('canvas');
+    const blackCtx = blackCanvas.getContext('2d');
+    blackCanvas.width = 640;
+    blackCanvas.height = 480;
+    blackCtx!.fillStyle = 'black';
+    blackCtx!.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+    const blackStream = blackCanvas.captureStream();
+    const blackVideoTrack = blackStream.getVideoTracks()[0];
 
-    // this.localStream.getVideoTracks().forEach((track)=>{
-    //   track.stop();
-    //   this.localStream.removeTrack(track);
+    this.localStream.getVideoTracks().forEach((track)=>{
 
-    //   this.peerConnection.removeTrack(this.videoSender);
+      this.peerConnection.getSenders().forEach((res)=>{
+        if(res.track?.kind=='video'){
+          res.replaceTrack(blackVideoTrack);
+        }
+      })
+     
+      track.stop();
+      this.localStream.removeTrack(track);
 
-    // })
+    })
     this.isCameraOn=false;
   }
 
   turnOnMic(){
     this.isMicOn=true;
-    this.localStream.getAudioTracks()[0].enabled=true;
+    navigator.mediaDevices.getUserMedia({
+      audio:true
+    }).then(stream=>{
+      this.peerConnection.getSenders().forEach((res)=>{
+        if(res.track?.kind=='audio'){
+          this.localStream.addTrack(stream.getAudioTracks()[0]);
+          res.replaceTrack(stream.getAudioTracks()[0]);
+        }
+      })
+    })
   }
 
   turnOffMic(){
     this.isMicOn=false;
-    this.localStream.getAudioTracks()[0].enabled=false;
+    if(this.localStream.getAudioTracks().length){
+      this.localStream.getAudioTracks()[0].stop();
+      this.localStream.removeTrack(this.localStream.getAudioTracks()[0]);
+    }
   }
 
 
@@ -203,7 +231,7 @@ export class HomeComponent implements OnInit,AfterViewInit {
         })
       }
 
-    })
+    })  
     
   }
 
