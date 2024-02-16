@@ -3,9 +3,9 @@
     <h3 *ngIf="permissionError" class="permission-error">Grant Camera and Mic Permission </h3>
     <div class="video-container">
   
-        <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream" [isMicOn]="isMicOn" [isCameraOn]="isCameraOn"></app-video>
+        <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream" [isMicOn]="isMicOn" [isCameraOn]="isCameraOn" (click)="expandVideo('local')"  [ngClass]="{'expanded-video':isSelectedVideo=='local','shrinked-video':isSelectedVideo=='remote'}"></app-video>
 
-        <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream"></app-video>
+        <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream" (click)="expandVideo('remote')" [ngClass]="{'shrinked-video':isSelectedVideo=='local','expanded-video':isSelectedVideo=='remote'}"></app-video>
      
     </div>
 
@@ -20,7 +20,7 @@
 
     </div>
 
-    <div class="buttons-container rounded border border-primary">
+    <div class="meeting-create-join-parent-container rounded border border-primary" *ngIf="createJoinContainerVisible">
       <div class="start-meeting-container">
         <button (click)="startNewMeeting()" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
           {{createRoomButtonText}} <i class="bi bi-camera-video"  *ngIf="!createRoomLoader"></i>
@@ -32,7 +32,7 @@
           <p class="h5 d-inline room-invite-code">Invite Code: {{offerRoomId}}</p>
           <i class="bi copy-button inline" [className]="copyIconClass" (click)="copyOfferRoomIdToClipBoard()"></i>
         </div>
-        
+
   
       </div>
 

@@ -45,6 +45,10 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   videoSender!:RTCRtpSender;
 
+  isSelectedVideo='local'
+
+  createJoinContainerVisible=true;
+
 
   servers = {
     iceServers: [
@@ -128,6 +132,10 @@ export class HomeComponent implements OnInit,AfterViewInit {
       this.localStream.getAudioTracks()[0].stop();
       this.localStream.removeTrack(this.localStream.getAudioTracks()[0]);
     }
+  }
+
+  expandVideo(videoOrigin:string){
+    this.isSelectedVideo=videoOrigin;
   }
 
 
@@ -296,6 +304,8 @@ export class HomeComponent implements OnInit,AfterViewInit {
               // }
               
             })
+            this.isSelectedVideo='remote';
+            this.createJoinContainerVisible=false;
           }
         }
       })
@@ -317,6 +327,8 @@ export class HomeComponent implements OnInit,AfterViewInit {
               // }
 
             })
+            this.isSelectedVideo='remote';
+            this.createJoinContainerVisible=false;
           }
         }
       })

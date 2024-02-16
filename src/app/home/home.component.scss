@@ -6,10 +6,6 @@
     padding: 1rem;
 }
 
-app-video{
-    height: 60vh;
-    margin: 1rem;
-}
 
 .permission-error{
     color:red
@@ -19,6 +15,22 @@ app-video{
     display:flex;
     gap: 2rem;
     justify-content: center;
+    width: 80%;
+    position: relative;
+    margin-top: 1rem;
+
+    .expanded-video{
+        height: 80vh;
+        width: 100%;
+    }
+    .shrinked-video{
+        position: absolute;
+        z-index: 2;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        max-width: 25%;
+    }
+    
 }
 
 @media screen and (max-width:700px){
@@ -30,7 +42,7 @@ app-video{
     }
 }
 
-.buttons-container{
+.meeting-create-join-parent-container{
     padding: 1rem;
     margin: 1.5rem;
 }
