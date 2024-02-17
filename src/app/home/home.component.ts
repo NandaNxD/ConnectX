@@ -59,6 +59,23 @@ export class HomeComponent implements OnInit,AfterViewInit {
     iceCandidatePoolSize: 10,
   };
 
+  displayMediaOptions = {
+    video: {
+      displaySurface: "browser",
+    },
+    audio: {
+      suppressLocalAudioPlayback: false,
+    } as  MediaTrackConstraints,
+    preferCurrentTab: false,
+    selfBrowserSurface: "exclude",
+    systemAudio: "include",
+    surfaceSwitching: "include",
+    monitorTypeSurfaces: "include",
+  };
+
+  
+  testMode=false;
+  
 
   constructor(private firebaseService:FirebaseService){
 
@@ -70,6 +87,40 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   }
 
+  turnOnShareScreen(){
+    navigator.mediaDevices
+    .getDisplayMedia(this.displayMediaOptions)
+    .then((stream)=>{
+      this.peerConnection.getSenders().forEach((res)=>{
+        if(res.track?.kind=='video'){
+          this.isCameraOn=false;
+          res.track.stop();
+          this.localStream.removeTrack(res.track);
+          this.localStream.addTrack(stream.getVideoTracks()[0]);
+          res.replaceTrack(stream.getVideoTracks()[0]);
+        }
+      })
+
+      stream.getVideoTracks()[0].onended = ()=>{
+        console.log('hello');
+        this.turnOffShareScreen();
+      };
+
+    })
+    .catch((err) => {
+      this.isScreenSharing=false;
+      console.error(err);
+      return null;
+    });
+
+    this.isScreenSharing=true;
+  } 
+
+  turnOffShareScreen(){
+    this.turnOffCamera();
+    this.isScreenSharing=false;
+  }
+
   turnOnCamera(){
     navigator.mediaDevices.getUserMedia({
       video:true
@@ -77,6 +128,7 @@ export class HomeComponent implements OnInit,AfterViewInit {
       this.peerConnection.getSenders().forEach((res)=>{
         if(res.track?.kind=='video'){
           res.track.stop();
+          this.localStream.removeTrack(res.track);
           this.localStream.addTrack(stream.getVideoTracks()[0]);
           res.replaceTrack(stream.getVideoTracks()[0]);
         }
@@ -99,14 +151,15 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
     this.localStream.getVideoTracks().forEach((track)=>{
 
+      track.stop();
+      this.localStream.removeTrack(track);
+
       this.peerConnection.getSenders().forEach((res)=>{
         if(res.track?.kind=='video'){
+          this.localStream.addTrack(blackVideoTrack);
           res.replaceTrack(blackVideoTrack);
         }
       })
-     
-      track.stop();
-      this.localStream.removeTrack(track);
 
     })
     this.isCameraOn=false;
@@ -192,6 +245,12 @@ export class HomeComponent implements OnInit,AfterViewInit {
       this.isCameraOn=true;
       this.isMicOn=true;
       this.illustrationVisible=false;
+
+      if(this.testMode){
+        return;
+      }
+
+
       this.createSdpOffer()
     })
     .catch(error=>{
