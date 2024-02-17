@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-video',
@@ -19,23 +19,22 @@ export class VideoComponent implements AfterViewInit,OnInit,OnChanges{
   @Input()
   isMicOn=true;
 
-  videoElement!:HTMLVideoElement;
+  @ViewChild('videoElement')
+  videoElement!: ElementRef<HTMLVideoElement>;
 
   constructor(){
 
   }
   ngOnChanges(changes: SimpleChanges): void {
-
+    if(this.videoElement)
+    this.videoElement.nativeElement.muted=this.local;
   }
 
   ngOnInit(): void {
    
   }
   ngAfterViewInit(): void {
-    this.videoElement=document.querySelector('.video-element') as HTMLVideoElement;
-
-    this.videoElement.muted=this.local;
-
+    this.videoElement.nativeElement.muted=this.local;
   }
 
 }
