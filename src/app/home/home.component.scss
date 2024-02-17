@@ -1,9 +1,10 @@
 .parent-container{
+    position: relative;
     display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
+    padding: 0.5rem;
 }
 
 
@@ -17,7 +18,7 @@
     justify-content: center;
     width: 90%;
     position: relative;
-    margin-top: 1rem;
+    margin-top: 0.6rem;
 
     .expanded-video{
         height: 80vh;
@@ -43,8 +44,8 @@
 }
 
 .meeting-create-join-parent-container{
-    padding: 1rem;
-    margin: 1.5rem;
+    padding: 0.9rem;
+    margin: 0.8rem;
 }
 
 
@@ -53,6 +54,14 @@
     align-items: center;
     flex-direction: column;
     gap:0.5rem
+}
+
+.overlay-container{
+    z-index: 2;
+    position: absolute;
+    background: white;
+    bottom: 4rem;
+    right: 4.2rem;
 }
 
 .divider{

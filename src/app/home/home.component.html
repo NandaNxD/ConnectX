@@ -9,6 +9,32 @@
      
     </div>
 
+    <div class="meeting-create-join-parent-container rounded border border-primary" *ngIf="createJoinContainerVisible" [ngClass]="{'overlay-container':offerRoomId}">
+      <div class="start-meeting-container">
+        <button (click)="startNewMeeting()" *ngIf="!offerRoomId" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
+          {{createRoomButtonText}} <i class="bi bi-camera-video"  *ngIf="!createRoomLoader"></i>
+          <span class="spinner-border spinner-border-sm" aria-hidden="true" *ngIf="createRoomLoader"></span>
+          
+        </button>
+  
+        <div *ngIf="offerRoomId">
+          <p class="h5 d-inline room-invite-code">Invite Code:{{offerRoomId}}</p>
+          <i class="bi copy-button inline" [className]="copyIconClass" (click)="copyOfferRoomIdToClipBoard()"></i>
+        </div>
+
+  
+      </div>
+
+      <hr class="divider" *ngIf="!offerRoomId">
+    
+      <div class="join-meeting-container" *ngIf="!offerRoomId">
+        <input [(ngModel)]="answerRoomId" class="form-control" placeholder="Enter Invite Code">
+  
+        <button (click)="joinMeeting()" class="btn btn-info text-nowrap" [disabled]="answerRoomId.length==0">Join Meeting  <i class="bi bi-send-plus-fill"></i></button>  
+      </div>
+     
+    </div>
+
     <div class="meeting-action-buttons" *ngIf="localStream || remoteStream">
 
       <i class="bi bi-camera-video-fill" *ngIf="isCameraOn" (click)="turnOffCamera()"></i>
@@ -21,32 +47,7 @@
 
     </div>
 
-    <div class="meeting-create-join-parent-container rounded border border-primary" *ngIf="createJoinContainerVisible">
-      <div class="start-meeting-container">
-        <button (click)="startNewMeeting()" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
-          {{createRoomButtonText}} <i class="bi bi-camera-video"  *ngIf="!createRoomLoader"></i>
-          <span class="spinner-border spinner-border-sm" aria-hidden="true" *ngIf="createRoomLoader"></span>
-          
-        </button>
-  
-        <div *ngIf="offerRoomId">
-          <p class="h5 d-inline room-invite-code">Invite Code: {{offerRoomId}}</p>
-          <i class="bi copy-button inline" [className]="copyIconClass" (click)="copyOfferRoomIdToClipBoard()"></i>
-        </div>
-
-  
-      </div>
-
-      <hr class="divider">
     
-      <div class="join-meeting-container">
-        <input [(ngModel)]="answerRoomId" class="form-control" placeholder="Enter Invite Code">
-  
-        <button (click)="joinMeeting()" class="btn btn-info text-nowrap" [disabled]="answerRoomId.length==0">Join Meeting  <i class="bi bi-send-plus-fill"></i></button>  
-      </div>
-     
-  
-    </div>
 
     <img src="assets/image.png" class="meet-image" *ngIf="illustrationVisible">
 
