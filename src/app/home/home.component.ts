@@ -1,7 +1,7 @@
-import { Component ,OnInit,AfterViewInit} from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FirebaseApp, initializeApp } from "firebase/app";
-import { DocumentChange, DocumentData, Firestore, QuerySnapshot, addDoc, getFirestore, updateDoc } from "firebase/firestore";
-import { doc, setDoc,getDoc,onSnapshot,collection,query,getDocs } from "firebase/firestore"; 
+import { DataSnapshot, Database, Unsubscribe, get, getDatabase, onChildAdded, onValue, push, ref, set, update } from "firebase/database";
+import { Firestore, getFirestore } from "firebase/firestore";
 import { FirebaseService } from '../firebase.service';
 
 @Component({
@@ -9,13 +9,38 @@ import { FirebaseService } from '../firebase.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit,AfterViewInit {
+export class HomeComponent implements OnInit,OnDestroy {
+
+  constructor(private firebaseService:FirebaseService,private cdr:ChangeDetectorRef){
+
+    this.firebaseApp = initializeApp(this.firebaseService.firebaseConfig);
+    
+    this.realtimeDb=getDatabase(this.firebaseApp);
+  
+    this.fireStore=getFirestore(this.firebaseApp);
+
+    this.peerConnection=new RTCPeerConnection(this.servers);
+
+  }
+
+  ngOnInit(): void {
+
+  }
+
+  ngOnDestroy(): void {
+    this.offerIceCandidateUnsubscribe();
+    this.answerIceCandidateUnsubscribe();
+    this.sdpAnswerUnsubscribe();
+    this.sdpOfferUnsubscribe();
+  }
+
 
   permissionError=false;
 
   permissionsGranted=false;
 
   firebaseApp!:FirebaseApp;
+  realtimeDb!:Database;
   fireStore!:Firestore ;
 
 
@@ -49,6 +74,11 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   createJoinContainerVisible=true;
 
+  offerIceCandidateUnsubscribe!:Unsubscribe;
+  answerIceCandidateUnsubscribe!:Unsubscribe;
+  sdpAnswerUnsubscribe!:Unsubscribe;
+  sdpOfferUnsubscribe!:Unsubscribe;
+
 
   servers = {
     iceServers: [
@@ -76,16 +106,6 @@ export class HomeComponent implements OnInit,AfterViewInit {
   
   testMode=false;
   
-
-  constructor(private firebaseService:FirebaseService){
-
-    this.firebaseApp = initializeApp(this.firebaseService.firebaseConfig);
-    
-    this.fireStore=getFirestore(this.firebaseApp);
-
-    this.peerConnection=new RTCPeerConnection(this.servers);
-
-  }
 
   turnOnShareScreen(){
     navigator.mediaDevices
@@ -117,8 +137,9 @@ export class HomeComponent implements OnInit,AfterViewInit {
   } 
 
   turnOffShareScreen(){
-    this.turnOffCamera();
     this.isScreenSharing=false;
+    this.cdr.detectChanges();
+    this.turnOffCamera();
   }
 
   turnOnCamera(){
@@ -137,6 +158,7 @@ export class HomeComponent implements OnInit,AfterViewInit {
     })
 
     this.isCameraOn=true;
+    this.isScreenSharing=false;
   }
 
   turnOffCamera(){
@@ -198,41 +220,44 @@ export class HomeComponent implements OnInit,AfterViewInit {
   }
 
   createSdpAnswer(){
-    let docRef=doc(this.fireStore,'Calls',this.answerRoomId);
+    let offerRef=ref(this.realtimeDb,this.answerRoomId);
 
     this.peerConnection.onicecandidate=(event:RTCPeerConnectionIceEvent)=>{
       if(event.candidate){
-        // let colRef=collection(this.fireStore,'Calls',res.id);
-        console.log('send ice candidate related to answer',this.answerRoomId);
-        
-        addDoc(collection(this.fireStore,'Calls',this.answerRoomId+'/answerIceCandidates'),event.candidate.toJSON());
        
+        console.log('send ice candidate related to answer',this.answerRoomId);
+
+        set(push(ref(this.realtimeDb,this.answerRoomId+'/answerIceCandidates')),event.candidate.toJSON());
+      
       }
     }
 
-    getDoc(docRef).then(res=>{
-      let resultObject=res.data() as any;
+    get(offerRef).then((value:DataSnapshot)=>{
+      if(value.exists()){
 
-      let remoteDescription=resultObject.sdpOffer
+        let resultObject=value.val() as any;
 
-      let localSdpAnswer:RTCSessionDescriptionInit;
+        let remoteDescription=resultObject.sdpOffer
 
-      this.peerConnection.setRemoteDescription(remoteDescription).then(()=>{
+        let localSdpAnswer:RTCSessionDescriptionInit;
 
-        return this.peerConnection.createAnswer();
-      }).then(sdpObject=>{
+        this.peerConnection.setRemoteDescription(remoteDescription).then(()=>{
 
-        localSdpAnswer=sdpObject
+          return this.peerConnection.createAnswer();
+        }).then(sdpObject=>{
 
-        return this.peerConnection.setLocalDescription(sdpObject);
-      }).then(()=>{
+          localSdpAnswer=sdpObject
 
-        return updateDoc(docRef,{
-          'sdpAnswer':{sdp:localSdpAnswer.sdp,type:localSdpAnswer.type}
-        })
-        
-      }).then(()=>this.listenToOfferIceCandidatesAddition())
+          return this.peerConnection.setLocalDescription(sdpObject);
+        }).then(()=>{
 
+          return update(offerRef,{
+            'sdpAnswer':{sdp:localSdpAnswer.sdp,type:localSdpAnswer.type}
+          })
+          
+        }).then(()=>this.listenToOfferIceCandidatesAddition())
+
+      }
     })
 
   }
@@ -296,14 +321,16 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
   createSdpOffer(){
 
-    let dref=doc(collection(this.fireStore,'Calls'));
+    let newMeetingRoomId=push(ref(this.realtimeDb)).key;
+
+    let meetingRef=ref(this.realtimeDb,newMeetingRoomId as string)
 
     this.peerConnection.onicecandidate=(event:RTCPeerConnectionIceEvent)=>{
       if(event.candidate){
-        // let colRef=collection(this.fireStore,'Calls',res.id);
-        console.log('send ice candidate related to offer',this.offerRoomId);
+      
+        console.log('send ice candidate related to offer',this.offerRoomId,event.candidate.toJSON());
 
-        addDoc(collection(this.fireStore,'Calls',this.offerRoomId+'/offerIceCandidates'),event.candidate.toJSON());
+        set(push(ref(this.realtimeDb,meetingRef.key+'/offerIceCandidates')),event.candidate.toJSON());
       }
     }
 
@@ -318,95 +345,102 @@ export class HomeComponent implements OnInit,AfterViewInit {
 
       offerDescriptionObject=offerDescription;
 
-      return setDoc(dref,{'sdpOffer':offerObject});
+      return set(meetingRef,
+        {'sdpOffer':offerObject}
+      )
 
-    }).then(res=>{
+    }).then(()=>{
 
-      this.offerRoomId=dref.id;
+      this.offerRoomId=newMeetingRoomId as string;
+      console.log('hello');
 
       return this.peerConnection.setLocalDescription(offerDescriptionObject);
 
     }).then(()=>{
 
+      console.log('Local Description set');
+
       this.createRoomLoader=false;
       
       this.listenToSdpAnswerAddition();
-
-      console.log(dref.id);
 
     })
 
   }
 
   listenToOfferIceCandidatesAddition(){
-    let docRef=collection(this.fireStore,'Calls',this.answerRoomId+'/offerIceCandidates');
-      onSnapshot(docRef,{
-        next:(res:QuerySnapshot<DocumentData, DocumentData>)=>{
-          if(!res.empty){
-            console.log('added offer')
-            res.docChanges().forEach((change:DocumentChange<DocumentData, DocumentData>)=>{
-              // if(change.type=='added'){ 
-                let iceCandidate=new RTCIceCandidate(change.doc.data())
-                this.peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-              // }
-              
-            })
-            this.isSelectedVideo='remote';
-            this.createJoinContainerVisible=false;
-          }
-        }
-      })
+
+    let offerIceCandidateRef=ref(this.realtimeDb,this.answerRoomId+'/offerIceCandidates');
+
+    this.offerIceCandidateUnsubscribe=onChildAdded(offerIceCandidateRef,(snapshot:DataSnapshot)=>{
+      console.log('okay')
+      if(snapshot.exists()){
+        console.log(snapshot.val());
+        let offerIceCandidate=snapshot.val() as RTCIceCandidateInit;
+
+        this.peerConnection.addIceCandidate(new RTCIceCandidate(offerIceCandidate));
+      
+        this.isSelectedVideo='remote';
+        this.createJoinContainerVisible=false;
+
+      }    
+    })
+
   }
 
 
   listenToAnswerIceCandidatesAddition(){
-    let docRef=collection(this.fireStore,'Calls',this.offerRoomId+'/answerIceCandidates');
-      onSnapshot(docRef,{
-        next:(res:QuerySnapshot<DocumentData, DocumentData>)=>{
-          if(!res.empty){
-            console.log('added answer')
-            res.docChanges().forEach((change:DocumentChange<DocumentData, DocumentData>)=>{
 
-              // if(change.type=='added'){
-                console.log(change.doc.data());
-                let iceCandidate=new RTCIceCandidate(change.doc.data())
-                this.peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-              // }
+    let answerIceCandidateRef=ref(this.realtimeDb,this.offerRoomId+'/answerIceCandidates');
 
-            })
-            this.isSelectedVideo='remote';
-            this.createJoinContainerVisible=false;
-          }
-        }
-      })
+    this.answerIceCandidateUnsubscribe=onChildAdded(answerIceCandidateRef,(snapshot:DataSnapshot)=>{
+      console.log('added answer')
+      if(snapshot.exists()){
+        console.log(snapshot.val());
+        let answerIceCandidate=snapshot.val() as RTCIceCandidateInit;
+        this.peerConnection.addIceCandidate(new RTCIceCandidate(answerIceCandidate));
+      
+        this.isSelectedVideo='remote';
+        this.createJoinContainerVisible=false;
+
+      }
+    })
   }
 
   listenToSdpAnswerAddition(){
-    let docRef=doc(this.fireStore,'Calls',this.offerRoomId);
 
-    let sdpAnswerSnapshotRef = onSnapshot(docRef,{
-        next:(res)=>{
-          if(res.exists()){
-            console.log(res.data());
-            let {sdpAnswer}:any=res.data()
-            if(sdpAnswer)
-            this.peerConnection.setRemoteDescription(sdpAnswer as RTCSessionDescriptionInit).then(()=>  this.listenToAnswerIceCandidatesAddition())          
-          }
-        }
-      })
+    let sdpAnswerRef=ref(this.realtimeDb,this.offerRoomId+'/sdpAnswer');
+
+    this.sdpAnswerUnsubscribe=onValue(sdpAnswerRef,(snapshot:DataSnapshot)=>{
+      console.log('okay')
+      if(snapshot.exists()){
+        console.log(snapshot.val());
+        
+        let sdpAnswer:any=snapshot.val()
+        if(sdpAnswer)
+        this.peerConnection.setRemoteDescription(sdpAnswer as RTCSessionDescriptionInit).then(()=>  this.listenToAnswerIceCandidatesAddition())    
+
+      }    
+    })
+
   }
 
   listenToSdpOfferAddition(){
-    let docRef=doc(this.fireStore,'Calls',this.answerRoomId+'/sdpOffer');
 
-    let sdpOfferSnapshotRef= onSnapshot(docRef,{
-        next:(res)=>{
-          if(res.exists()){
-            console.log(res.data());
-            this.peerConnection.setRemoteDescription(res.data() as RTCSessionDescriptionInit).then(()=>  this.listenToOfferIceCandidatesAddition())  
-          }
-        }
-      })
+    let sdpOfferRef=ref(this.realtimeDb,this.offerRoomId+'/sdpOffer');
+
+    this.sdpOfferUnsubscribe=onValue(sdpOfferRef,(snapshot:DataSnapshot)=>{
+      console.log('Sdp Offer Received')
+      if(snapshot.exists()){
+        console.log(snapshot.val());
+        
+        let sdpAnswer:any=snapshot.val()
+        if(sdpAnswer)
+        this.peerConnection.setRemoteDescription(sdpAnswer as RTCSessionDescriptionInit).then(()=>  this.listenToAnswerIceCandidatesAddition())    
+
+      }    
+    })
+
   }
 
   copyOfferRoomIdToClipBoard(){
@@ -415,16 +449,6 @@ export class HomeComponent implements OnInit,AfterViewInit {
     setTimeout(()=>{
       this.copyIconClass='bi-copy'
     },2000)
-  }
-
-  
-
-  ngOnInit(): void {
-
-  }
-
-  ngAfterViewInit(): void {
-
   }
 
 }
