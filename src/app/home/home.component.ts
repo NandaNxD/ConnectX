@@ -4,6 +4,7 @@ import { DataSnapshot, Database, Unsubscribe, get, getDatabase, onChildAdded, on
 import { Firestore, getFirestore } from "firebase/firestore";
 import { FirebaseService } from '../firebase.service';
 import { Router } from '@angular/router';
+import { throwError } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -68,7 +69,6 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   peerConnection!:RTCPeerConnection;
 
-  creator=true;
 
   offerRoomId=''
 
@@ -97,6 +97,8 @@ export class HomeComponent implements OnInit,OnDestroy {
   meetingRoomUnsubscribe!:Unsubscribe;
 
   meetingEndedByPeer=false;
+
+  invalidMeetingRoom=false;
 
   dbSDPBasePath='SDP_DATA/';
   chatBasePath='CHAT/';
@@ -224,21 +226,39 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
 
+  checkIfMeetingRoomExists(){
+    let offerRef=ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId);
+    return get(offerRef).then((snapshot)=>{
+      if(!snapshot.exists()){
+        
+        throw new Error('MeetingRoomError');
+      }
+    }
+    );
+  }
+
+
   joinMeeting(){
-    this.creator=false;
+    this.invalidMeetingRoom=false;
     this.meetingEndedByPeer=false;
     
-    this.getPermissions()
-    .then(()=>{
+    this.checkIfMeetingRoomExists().then(()=>{
+      return this.getPermissions();
+    }).then(()=>{
       this.isCameraOn=true;
       this.isMicOn=true;
       this.illustrationVisible=false;
       this.createSdpAnswer()
+    }).catch((error)=>{
+      console.error(error);
+      if(error.message==='MeetingRoomError'){
+        this.invalidMeetingRoom=true;
+      }
+      else{
+        this.permissionError=true;
+      }
     })
-    .catch((error)=>{
-      this.permissionError=true;
-      console.log(error)
-    })
+    
    
   }
 
@@ -288,7 +308,8 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
 
-  startNewMeeting(){
+  createNewMeeting(){
+    this.invalidMeetingRoom=false;
     this.createRoomLoader=true;
     this.meetingEndedByPeer=false;
     this.getPermissions()

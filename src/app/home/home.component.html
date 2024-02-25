@@ -7,6 +7,11 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" *ngIf="invalidMeetingRoom">
+      Invite Code Doesnt Invalid!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
     <div class="video-container" *ngIf="!meetingEndedByPeer">
   
         <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream" [isMicOn]="isMicOn" [isCameraOn]="isCameraOn" (click)="expandVideo('local')"  [ngClass]="{'expanded-video':isSelectedVideo=='local','shrinked-video':isSelectedVideo=='remote'}"></app-video>
@@ -17,7 +22,7 @@
 
     <div class="meeting-create-join-parent-container rounded border border-primary" *ngIf="createJoinContainerVisible" [ngClass]="{'overlay-container':offerRoomId}">
       <div class="start-meeting-container">
-        <button (click)="startNewMeeting()" *ngIf="!offerRoomId" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
+        <button (click)="createNewMeeting()" *ngIf="!offerRoomId" type="button" class="btn btn-primary" [disabled]="createRoomLoader">
           {{createRoomButtonText}} <i class="bi bi-camera-video"  *ngIf="!createRoomLoader"></i>
           <span class="spinner-border spinner-border-sm" aria-hidden="true" *ngIf="createRoomLoader"></span>
           
