@@ -1,8 +1,9 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FirebaseApp, initializeApp } from "firebase/app";
-import { DataSnapshot, Database, Unsubscribe, get, getDatabase, onChildAdded, onValue, push, ref, set, update } from "firebase/database";
+import { DataSnapshot, Database, Unsubscribe, get, getDatabase, onChildAdded, onValue, push, ref, set, update,onDisconnect, onChildRemoved } from "firebase/database";
 import { Firestore, getFirestore } from "firebase/firestore";
 import { FirebaseService } from '../firebase.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -11,7 +12,7 @@ import { FirebaseService } from '../firebase.service';
 })
 export class HomeComponent implements OnInit,OnDestroy {
 
-  constructor(private firebaseService:FirebaseService,private cdr:ChangeDetectorRef){
+  constructor(private firebaseService:FirebaseService,private cdr:ChangeDetectorRef,private router:Router){
 
     this.firebaseApp = initializeApp(this.firebaseService.firebaseConfig);
     
@@ -20,6 +21,10 @@ export class HomeComponent implements OnInit,OnDestroy {
     this.fireStore=getFirestore(this.firebaseApp);
 
     this.peerConnection=new RTCPeerConnection(this.servers);
+    
+    this.meetingEndedByPeer=this.firebaseService.meetingEndedByPeer || false;
+
+    this.firebaseService.meetingEndedByPeer=false;
 
   }
 
@@ -28,10 +33,21 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if(this.offerIceCandidateUnsubscribe)
     this.offerIceCandidateUnsubscribe();
+   
+    if(this.answerIceCandidateUnsubscribe)
     this.answerIceCandidateUnsubscribe();
+
+    if(this.sdpAnswerUnsubscribe)
     this.sdpAnswerUnsubscribe();
+
+    if(this.sdpOfferUnsubscribe)
     this.sdpOfferUnsubscribe();
+
+    if(this.meetingRoomUnsubscribe){
+      this.meetingRoomUnsubscribe();
+    }
   }
 
 
@@ -78,6 +94,12 @@ export class HomeComponent implements OnInit,OnDestroy {
   answerIceCandidateUnsubscribe!:Unsubscribe;
   sdpAnswerUnsubscribe!:Unsubscribe;
   sdpOfferUnsubscribe!:Unsubscribe;
+  meetingRoomUnsubscribe!:Unsubscribe;
+
+  meetingEndedByPeer=false;
+
+  dbSDPBasePath='SDP_DATA/';
+  chatBasePath='CHAT/';
 
 
   servers = {
@@ -204,6 +226,7 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   joinMeeting(){
     this.creator=false;
+    this.meetingEndedByPeer=false;
     
     this.getPermissions()
     .then(()=>{
@@ -220,14 +243,16 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   createSdpAnswer(){
-    let offerRef=ref(this.realtimeDb,this.answerRoomId);
+    let offerRef=ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId);
+
+    onDisconnect(ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId)).set(null);
 
     this.peerConnection.onicecandidate=(event:RTCPeerConnectionIceEvent)=>{
       if(event.candidate){
        
         console.log('send ice candidate related to answer',this.answerRoomId);
 
-        set(push(ref(this.realtimeDb,this.answerRoomId+'/answerIceCandidates')),event.candidate.toJSON());
+        set(push(ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId+'/answerIceCandidates')),event.candidate.toJSON());
       
       }
     }
@@ -265,6 +290,7 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   startNewMeeting(){
     this.createRoomLoader=true;
+    this.meetingEndedByPeer=false;
     this.getPermissions()
     .then(()=>{
       this.isCameraOn=true;
@@ -315,22 +341,34 @@ export class HomeComponent implements OnInit,OnDestroy {
     
   }
 
+  cleanRTDB(){
+    set(ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId || this.offerRoomId),null);
+  }
+
   endMeeting(){
-    location.reload();
+    if(this.meetingRoomUnsubscribe){
+      this.meetingRoomUnsubscribe();
+    }
+    this.cleanRTDB();
+    this.stopLocalStreamTracks();
+    this.stopRemoteStreamTracks();
+    this.reloadCurrentRoute();
   }
 
   createSdpOffer(){
 
     let newMeetingRoomId=push(ref(this.realtimeDb)).key;
 
-    let meetingRef=ref(this.realtimeDb,newMeetingRoomId as string)
+    let meetingRef=ref(this.realtimeDb,this.dbSDPBasePath+newMeetingRoomId as string)
+
+    onDisconnect(ref(this.realtimeDb,this.dbSDPBasePath+newMeetingRoomId)).set(null);
 
     this.peerConnection.onicecandidate=(event:RTCPeerConnectionIceEvent)=>{
       if(event.candidate){
       
-        console.log('send ice candidate related to offer',this.offerRoomId,event.candidate.toJSON());
+        console.log('send ice candidate related to offer',this.dbSDPBasePath+this.offerRoomId,event.candidate.toJSON());
 
-        set(push(ref(this.realtimeDb,meetingRef.key+'/offerIceCandidates')),event.candidate.toJSON());
+        set(push(ref(this.realtimeDb,this.dbSDPBasePath+meetingRef.key+'/offerIceCandidates')),event.candidate.toJSON());
       }
     }
 
@@ -368,9 +406,44 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   }
 
+  reloadCurrentRoute() {
+    let currentUrl = this.router.url;
+    this.router.navigateByUrl('/video-test', {skipLocationChange: true}).then(() => {
+      this.router.navigate([currentUrl]);
+    });
+  }
+
+  stopLocalStreamTracks(){
+    this.localStream.getTracks().forEach((track)=>{
+      track.stop();
+    })
+  }
+
+  stopRemoteStreamTracks(){
+    this.remoteStream.getTracks().forEach((track)=>{
+      track.stop();
+    })
+  }
+
+  listenToPeerEndingMeeting(){
+    this.meetingRoomUnsubscribe=onChildRemoved(ref(this.realtimeDb,this.dbSDPBasePath+'/'),(snapshot)=>{
+      if(snapshot.exists()){
+        if(snapshot.key==this.offerRoomId || snapshot.key==this.answerRoomId){
+          this.meetingEndedByPeer=true;
+
+          this.stopLocalStreamTracks();
+          this.stopRemoteStreamTracks();
+          
+          this.firebaseService.meetingEndedByPeer=true;
+          this.reloadCurrentRoute();          
+        }
+      }
+    })
+  }
+
   listenToOfferIceCandidatesAddition(){
 
-    let offerIceCandidateRef=ref(this.realtimeDb,this.answerRoomId+'/offerIceCandidates');
+    let offerIceCandidateRef=ref(this.realtimeDb,this.dbSDPBasePath+this.answerRoomId+'/offerIceCandidates');
 
     this.offerIceCandidateUnsubscribe=onChildAdded(offerIceCandidateRef,(snapshot:DataSnapshot)=>{
       console.log('okay')
@@ -386,12 +459,15 @@ export class HomeComponent implements OnInit,OnDestroy {
       }    
     })
 
+    console.log(this.offerIceCandidateUnsubscribe);
+
+    this.listenToPeerEndingMeeting();
   }
 
 
   listenToAnswerIceCandidatesAddition(){
 
-    let answerIceCandidateRef=ref(this.realtimeDb,this.offerRoomId+'/answerIceCandidates');
+    let answerIceCandidateRef=ref(this.realtimeDb,this.dbSDPBasePath+this.offerRoomId+'/answerIceCandidates');
 
     this.answerIceCandidateUnsubscribe=onChildAdded(answerIceCandidateRef,(snapshot:DataSnapshot)=>{
       console.log('added answer')
@@ -405,11 +481,13 @@ export class HomeComponent implements OnInit,OnDestroy {
 
       }
     })
+
+    this.listenToPeerEndingMeeting();
   }
 
   listenToSdpAnswerAddition(){
 
-    let sdpAnswerRef=ref(this.realtimeDb,this.offerRoomId+'/sdpAnswer');
+    let sdpAnswerRef=ref(this.realtimeDb,this.dbSDPBasePath+this.offerRoomId+'/sdpAnswer');
 
     this.sdpAnswerUnsubscribe=onValue(sdpAnswerRef,(snapshot:DataSnapshot)=>{
       console.log('okay')
@@ -427,7 +505,7 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   listenToSdpOfferAddition(){
 
-    let sdpOfferRef=ref(this.realtimeDb,this.offerRoomId+'/sdpOffer');
+    let sdpOfferRef=ref(this.realtimeDb,this.dbSDPBasePath+this.offerRoomId+'/sdpOffer');
 
     this.sdpOfferUnsubscribe=onValue(sdpOfferRef,(snapshot:DataSnapshot)=>{
       console.log('Sdp Offer Received')

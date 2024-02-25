@@ -1,7 +1,13 @@
 <div class="parent-container">
     <h1 class="h1"><i class="bi bi-camera-video-fill"></i> Connect-X</h1>
     <h3 *ngIf="permissionError" class="permission-error">Grant Camera and Mic Permission </h3>
-    <div class="video-container">
+
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" *ngIf="meetingEndedByPeer">
+        Meeting was ended by other person!
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="video-container" *ngIf="!meetingEndedByPeer">
   
         <app-video [mediaStream]="localStream" [local]="true" *ngIf="localStream" [isMicOn]="isMicOn" [isCameraOn]="isCameraOn" (click)="expandVideo('local')"  [ngClass]="{'expanded-video':isSelectedVideo=='local','shrinked-video':isSelectedVideo=='remote'}"></app-video>
 

@@ -15,7 +15,8 @@ export class FirebaseService {
     appId: "1:1092078779809:web:cc6da91f6c73d65bd45fe0",
     measurementId: "G-7Y12Z3H9HP"
   };
-  
+
+  meetingEndedByPeer=false;  
 
   constructor() {
     
