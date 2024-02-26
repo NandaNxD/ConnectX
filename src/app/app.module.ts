@@ -6,12 +6,14 @@ import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
 import { VideoComponent } from './video/video.component';
 import { HomeComponent } from './home/home.component';
+import { ChatComponent } from './chat/chat.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     VideoComponent,
-    HomeComponent
+    HomeComponent,
+    ChatComponent
   ],
   imports: [
     BrowserModule,

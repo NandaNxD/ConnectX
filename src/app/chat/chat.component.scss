@@ -1,0 +1,111 @@
+.chat-container-parent{
+    position: relative;
+    height: 80vh;
+
+    .chat-container{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+        height: calc(80vh - 40px);
+        
+        display: flex;
+        justify-content: flex-start;
+
+        .chat-header-parent{
+            position: relative;
+            width: 100%;
+            background: var(--bs-dark);
+            color:white;
+        }
+
+        .bi-x{
+            font-size: x-large;
+            position: absolute;
+            right: 0.4rem;
+            top:0.2rem;
+        }
+
+        .bi-x:hover{
+            transform: scale(1.1);
+            transition: all 200ms;
+        }
+        
+        .bi-x:active{
+            transform: scale(1.0);
+        }
+
+
+        .chat-container-heading-text{
+            margin-top: 0.5rem;
+            text-align: center;
+            margin-bottom: 0.7rem;
+            //text-decoration: underline;
+        }
+
+        .message-container{
+            position: relative;
+            padding: 0.4rem;
+            margin: 0.4rem;
+
+            margin-top: 1rem;
+            border-radius: 4px;
+            width: fit-content;
+            max-width: 90%;
+            word-wrap: break-word;
+            text-wrap: wrap;
+            margin-bottom: 1.5rem;
+
+            .sender-details{
+                position: absolute;
+                font-size: x-small;
+                top:-1rem;
+                right:0px;
+                color:black
+            }
+
+            .receiver-details{
+                position: absolute;
+                font-size: x-small;
+                top:-1rem;
+                left:0px;
+                color:black
+            }
+        }
+
+        .align-start{
+            text-align: start;
+        }
+
+        .align-end{
+            text-align: end;
+        }
+
+        .sent-message{
+            background:#0d6efd;
+            color:white;
+            margin-left: auto;
+        }
+
+        .received-message{
+            background:black;
+            color:white;
+        }
+
+       
+
+        .chat-container-body{
+            scrollbar-width: thin;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+       
+    }
+    .send-message-input{
+        z-index: 2;
+    }
+
+    
+}

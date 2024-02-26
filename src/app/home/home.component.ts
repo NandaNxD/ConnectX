@@ -69,6 +69,9 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   peerConnection!:RTCPeerConnection;
 
+  hideChat=true;
+
+  chatEnabled=false;
 
   offerRoomId=''
 
@@ -221,6 +224,10 @@ export class HomeComponent implements OnInit,OnDestroy {
     this.isMicOn=false;
   }
 
+  openCloseChatSideNav(){
+    this.hideChat=!this.hideChat;
+  }
+
   expandVideo(videoOrigin:string){
     this.isSelectedVideo=videoOrigin;
   }
@@ -354,6 +361,7 @@ export class HomeComponent implements OnInit,OnDestroy {
         this.remoteStream=new MediaStream();
         rtcTrackEvent.streams[0].getTracks().forEach((mediaStreamTrack)=>{
           console.log('adding remote tracks');
+          this.chatEnabled=true;
           this.remoteStream.addTrack(mediaStreamTrack);
         })
       }
@@ -380,7 +388,7 @@ export class HomeComponent implements OnInit,OnDestroy {
 
     let newMeetingRoomId=push(ref(this.realtimeDb)).key;
 
-    let meetingRef=ref(this.realtimeDb,this.dbSDPBasePath+newMeetingRoomId as string)
+    let meetingRef=ref(this.realtimeDb,this.dbSDPBasePath+newMeetingRoomId as string);
 
     onDisconnect(ref(this.realtimeDb,this.dbSDPBasePath+newMeetingRoomId)).set(null);
 
@@ -435,13 +443,13 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   stopLocalStreamTracks(){
-    this.localStream.getTracks().forEach((track)=>{
+    this.localStream?.getTracks().forEach((track)=>{
       track.stop();
     })
   }
 
   stopRemoteStreamTracks(){
-    this.remoteStream.getTracks().forEach((track)=>{
+    this.remoteStream?.getTracks().forEach((track)=>{
       track.stop();
     })
   }

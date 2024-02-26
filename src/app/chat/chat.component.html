@@ -1,0 +1,44 @@
+<div class="chat-container-parent  border border-2 border-dark rounded">
+  <div class="chat-container rounded">
+
+    <div class="border border-dark border-2 rounded chat-header-parent">
+        <h5 class="h5 chat-container-heading-text" >Messages</h5><i class="bi bi-x" (click)="closeChatContainer()"></i>
+    </div>
+    
+    
+    <div class="chat-container-body">
+
+        <div *ngFor="let messageObject of messages;let messageIndex=index" class="message-container shadow" [ngClass]="{'align-end':messageIndex%2===0,'align-start':messageIndex%2!==0,'sent-message':messageObject.senderId===this.userId,'received-message':messageObject.senderId!==userId}">
+            {{messageObject.message}}
+            <div class="sender-details" [ngClass]="{'sender-details':messageObject.senderId===this.userId,'receiver-details':messageObject.senderId!==this.userId}">
+                {{messageObject.senderName}}
+            </div>
+            
+        </div>
+
+        <!-- <span class="spinner-border-primary spinner-border-sm" aria-hidden="true" *ngIf="pushMessageToDbLoader" style="margin-left: 70%;"></span> -->
+
+        <div class="auto-scroll-helper" #autoScrollHelper>
+
+        </div>
+        
+    </div>
+    
+  </div>
+  <div class="input-group send-message-input">
+    <input
+      type="text"
+      class="form-control border border-primary"
+      placeholder="Send a message"
+      aria-label="message-input"
+      aria-describedby="button-addon2"
+        (keydown.enter)="sendMessage()"
+      [(ngModel)]="messageInputText"
+    />
+
+    <button class="btn btn-outline-primary" type="button" id="button-addon2" (click)="sendMessage()">
+      <i class="bi bi-send" ></i>
+     
+    </button>
+  </div>
+</div>
