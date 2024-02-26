@@ -246,6 +246,10 @@ export class HomeComponent implements OnInit,OnDestroy {
 
 
   joinMeeting(){
+    if(!this.answerRoomId){
+      return;
+    }
+
     this.invalidMeetingRoom=false;
     this.meetingEndedByPeer=false;
     
