@@ -320,6 +320,7 @@ export class HomeComponent implements OnInit,OnDestroy {
 
 
   createNewMeeting(){
+    this.answerRoomId='';
     this.invalidMeetingRoom=false;
     this.createRoomLoader=true;
     this.meetingEndedByPeer=false;
@@ -398,9 +399,6 @@ export class HomeComponent implements OnInit,OnDestroy {
 
     this.peerConnection.onicecandidate=(event:RTCPeerConnectionIceEvent)=>{
       if(event.candidate){
-      
-        console.log('send ice candidate related to offer',this.dbSDPBasePath+this.offerRoomId,event.candidate.toJSON());
-
         set(push(ref(this.realtimeDb,this.dbSDPBasePath+meetingRef.key+'/offerIceCandidates')),event.candidate.toJSON());
       }
     }

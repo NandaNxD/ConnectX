@@ -20,7 +20,7 @@
         <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream" (click)="expandVideo('remote')" [ngClass]="{'shrinked-video':isSelectedVideo=='local','expanded-video':isSelectedVideo=='remote'}"></app-video>
      
     </div>
-    <app-chat [hidden]="hideChat" [meetingRoomId]="offerRoomId || answerRoomId"  (closeChatWindow)="openCloseChatSideNav()">
+    <app-chat [hidden]="hideChat" [meetingRoomId]="offerRoomId || answerRoomId" *ngIf="chatEnabled"  (closeChatWindow)="openCloseChatSideNav()">
 
     </app-chat>
   </div>
