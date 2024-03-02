@@ -22,7 +22,10 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
   messages:Message[]=[]
 
   @Output()
-  closeChatWindow:Subject<boolean>=new Subject<boolean>();
+  closeChatWindow$:Subject<boolean>=new Subject<boolean>();
+
+  @Output()
+  unreadMessagesCount$:Subject<number>=new Subject<number>();
   
   @ViewChild('autoScrollHelper')
   autoScrollHelperElement!:ElementRef<HTMLDivElement>
@@ -39,9 +42,14 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
 
   messageUnsubscribe!:Unsubscribe;
 
+  @Input()
+  chatHidden:boolean=true;
+
   whiteboardRoomId='';
 
   whiteboardUrl='https://whiteboard-1fc46.web.app/draw?roomId=';
+
+  unreadMessageCnt=0;
   
   constructor(private firebaseService:FirebaseService){
     this.realtimeDb=getDatabase();
@@ -61,8 +69,16 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
       this.listenToPeerMessages();
     }
 
-    if(changes['startCollaborativeWhiteboard'].currentValue){
+    if(changes['startCollaborativeWhiteboard']?.currentValue){
       this.createNewCollaborativeWhiteboard();
+    }
+
+    if(changes['chatHidden']){
+      if(!changes['chatHidden'].currentValue){
+        this.unreadMessageCnt=0;
+        this.unreadMessagesCount$.next(this.unreadMessageCnt);
+        this.scrollToLatestMessage();
+      }
     }
     
   }
@@ -91,6 +107,12 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
         if(message.senderId!==this.userId){
           this.messages.push(message);
           this.scrollToLatestMessage();
+
+          if(this.chatHidden){
+            this.unreadMessageCnt++;
+            this.unreadMessagesCount$.next(this.unreadMessageCnt);
+          }
+
         }
         
       }
@@ -129,7 +151,10 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
   }
 
   closeChatContainer(){
-    this.closeChatWindow.next(true);
+    this.unreadMessageCnt=0;
+    this.unreadMessagesCount$.next(this.unreadMessageCnt);
+
+    this.closeChatWindow$.next(true);
   }
 
   createNewCollaborativeWhiteboard(){
@@ -139,11 +164,12 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
   }
 
   sendWhiteboardUrlMessage(){
+    this.firebaseService.whiteboardCollaborativeUrl=this.whiteboardUrl+this.whiteboardRoomId;
     let messagePayload:Message={
-      message:'Sending a Collaborative Whiteboard: ',
+      message:'Lets Collaborate using a Whiteboard: ',
       senderId:this.userId,
       senderName:'Peer',
-      link:this.whiteboardUrl+this.whiteboardRoomId,
+      link:this.firebaseService.whiteboardCollaborativeUrl,
       time:new Date().toUTCString()
     }
 

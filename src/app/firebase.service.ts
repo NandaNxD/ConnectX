@@ -18,6 +18,8 @@ export class FirebaseService {
 
   meetingEndedByPeer=false;  
 
+  whiteboardCollaborativeUrl='';
+
   constructor() {
     
   }

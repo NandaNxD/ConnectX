@@ -110,6 +110,8 @@ export class HomeComponent implements OnInit,OnDestroy {
 
   startCollaborativeWhiteboard=false;
 
+  unreadMessageCount=0;
+
 
   servers = {
     iceServers: [
@@ -229,6 +231,9 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   openCloseChatSideNav(){
+    if(!this.hideChat){
+      this.unreadMessageCount=0;
+    }
     this.hideChat=!this.hideChat;
   }
 
@@ -557,8 +562,16 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   sendCollaborativeWhiteboard(){
+    if(this.startCollaborativeWhiteboard && this.firebaseService.whiteboardCollaborativeUrl){
+      window.open(this.firebaseService.whiteboardCollaborativeUrl,'_blank');
+      return;
+    }
     this.hideChat=false;
     this.startCollaborativeWhiteboard=true;
+  }
+
+  changeUnreadMessageCount(messageCount:number){
+    this.unreadMessageCount=messageCount;
   }
 
   copyOfferRoomIdToClipBoard(){

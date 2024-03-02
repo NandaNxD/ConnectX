@@ -130,6 +130,19 @@ app-chat{
 
 }
 
+.message-counter-dot{
+    font-size: x-small;
+    position: absolute;
+    transform: translateY(-3rem) translateX(2rem);
+    color: white;
+    background: red;
+    border-radius: 50%;
+    height: 1rem;
+    width: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 .bi:hover{
     transform: scale(1.1);

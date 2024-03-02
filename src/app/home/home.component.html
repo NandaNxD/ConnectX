@@ -20,7 +20,7 @@
         <app-video [mediaStream]="remoteStream" [local]="false" *ngIf="remoteStream" (click)="expandVideo('remote')" [ngClass]="{'shrinked-video':isSelectedVideo=='local','expanded-video':isSelectedVideo=='remote'}"></app-video>
      
     </div>
-    <app-chat [hidden]="hideChat" [meetingRoomId]="offerRoomId || answerRoomId" *ngIf="chatEnabled" [startCollaborativeWhiteboard]="startCollaborativeWhiteboard"  (closeChatWindow)="openCloseChatSideNav()">
+    <app-chat [chatHidden]="hideChat" [hidden]="hideChat" [meetingRoomId]="offerRoomId || answerRoomId" *ngIf="chatEnabled" [startCollaborativeWhiteboard]="startCollaborativeWhiteboard"  (closeChatWindow$)="openCloseChatSideNav()" (unreadMessagesCount$)="changeUnreadMessageCount($event)">
 
     </app-chat>
   </div>
@@ -61,7 +61,11 @@
       <i class="bi bi-arrow-up-square-fill" *ngIf="!isScreenSharing" (click)="turnOnShareScreen()"></i>
       <i class="bi bi-file-excel-fill red-button" style="transform: rotate(90deg);" *ngIf="isScreenSharing" (click)="turnOffShareScreen()"></i>
 
-      <i class="bi bi-chat-left-dots-fill sidenav-open-button" *ngIf="chatEnabled" (click)="openCloseChatSideNav()"></i>
+      <i class="bi bi-chat-left-dots-fill sidenav-open-button" *ngIf="chatEnabled" style="position: relative;" (click)="openCloseChatSideNav()">
+        <div class="message-counter-dot">
+          {{unreadMessageCount}}
+        </div>
+      </i>
 
       <i class="bi bi-palette" *ngIf="chatEnabled" (click)="sendCollaborativeWhiteboard()"></i>
     </div>
