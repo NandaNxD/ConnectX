@@ -106,6 +106,10 @@ export class HomeComponent implements OnInit,OnDestroy {
   dbSDPBasePath='SDP_DATA/';
   chatBasePath='CHAT/';
 
+  whiteboardRoomId='';
+
+  startCollaborativeWhiteboard=false;
+
 
   servers = {
     iceServers: [
@@ -550,6 +554,11 @@ export class HomeComponent implements OnInit,OnDestroy {
       }    
     })
 
+  }
+
+  sendCollaborativeWhiteboard(){
+    this.hideChat=false;
+    this.startCollaborativeWhiteboard=true;
   }
 
   copyOfferRoomIdToClipBoard(){

@@ -9,7 +9,7 @@
     <div class="chat-container-body">
 
         <div *ngFor="let messageObject of messages;let messageIndex=index" class="message-container shadow" [ngClass]="{'align-end':messageIndex%2===0,'align-start':messageIndex%2!==0,'sent-message':messageObject.senderId===this.userId,'received-message':messageObject.senderId!==userId}">
-            {{messageObject.message}}
+            {{messageObject.message}} <a [href]="messageObject.link" target="_blank" *ngIf="messageObject.link" style="color:white" [ngStyle]="{'color':messageObject.senderId==this.userId?'white':'#48a1ff'}">{{messageObject.link}}</a>
             <div class="sender-details" [ngClass]="{'sender-details':messageObject.senderId===this.userId,'receiver-details':messageObject.senderId!==this.userId}">
                 {{messageObject.senderName}}
             </div>

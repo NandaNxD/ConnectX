@@ -16,6 +16,9 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
   @Input()
   meetingRoomId:string=''
 
+  @Input()
+  startCollaborativeWhiteboard:boolean=false;
+
   messages:Message[]=[]
 
   @Output()
@@ -35,6 +38,10 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
   pushMessageToDbLoader=false;
 
   messageUnsubscribe!:Unsubscribe;
+
+  whiteboardRoomId='';
+
+  whiteboardUrl='https://whiteboard-1fc46.web.app/draw?roomId=';
   
   constructor(private firebaseService:FirebaseService){
     this.realtimeDb=getDatabase();
@@ -52,6 +59,10 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
 
       if(!this.messageUnsubscribe)
       this.listenToPeerMessages();
+    }
+
+    if(changes['startCollaborativeWhiteboard'].currentValue){
+      this.createNewCollaborativeWhiteboard();
     }
     
   }
@@ -119,6 +130,34 @@ export class ChatComponent implements OnInit,AfterViewInit,OnChanges,OnDestroy{
 
   closeChatContainer(){
     this.closeChatWindow.next(true);
+  }
+
+  createNewCollaborativeWhiteboard(){
+    this.whiteboardRoomId=push(ref(this.realtimeDb,'Whiteboard')).key as string;
+
+    this.sendWhiteboardUrlMessage();
+  }
+
+  sendWhiteboardUrlMessage(){
+    let messagePayload:Message={
+      message:'Sending a Collaborative Whiteboard: ',
+      senderId:this.userId,
+      senderName:'Peer',
+      link:this.whiteboardUrl+this.whiteboardRoomId,
+      time:new Date().toUTCString()
+    }
+
+    push(ref(this.realtimeDb,this.chatBasePathDb+`/${this.meetingRoomId}`),
+    messagePayload
+  ).then((ref)=>{
+    messagePayload.senderName='You';     
+    this.messages.push(messagePayload);
+    this.scrollToLatestMessage();
+  
+    this.pushMessageToDbLoader=false;
+  }).catch(error=>{
+    this.pushMessageToDbLoader=false;
+  })
   }
   
 }
